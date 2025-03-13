@@ -2,9 +2,21 @@ import React, { useState } from 'react';
 import PixForm from './components/PixForm';
 import './App.css';
 
+const Modal: React.FC<{ message: string; onClose: () => void }> = ({ message, onClose }) => {
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <p>{message}</p>
+        <button onClick={onClose} className="btn-close">Fechar</button>
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [pixData, setPixData] = useState<{ qrcode: string; imagemQrcode: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   const handlePixSubmit = async (data: { cpf: string; nome: string; valor: string }) => {
     setError(null);
@@ -14,15 +26,10 @@ const App: React.FC = () => {
       const response = await fetch('https://pix-3.onrender.com/cobranca', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cpf: data.cpf,
-          nome: data.nome,
-          valor: data.valor, // Valor já é string
-        }),
+        body: JSON.stringify(data),
       });
 
       const result = await response.json();
-      console.log(result);  // Verifique a resposta
 
       if (result.sucesso) {
         setPixData({
@@ -40,7 +47,7 @@ const App: React.FC = () => {
   const copiarCodigoPix = () => {
     if (pixData?.qrcode) {
       navigator.clipboard.writeText(pixData.qrcode);
-      alert('Código Pix copiado!');
+      setShowModal(true);
     }
   };
 
@@ -49,10 +56,8 @@ const App: React.FC = () => {
       <h4 className="title">Contribua Com A Fé</h4>
       <PixForm onSubmit={handlePixSubmit} />
 
-      {/* Exibir erro se houver */}
       {error && <p className="error-message">{error}</p>}
 
-      {/* Exibir QR Code e código Pix se disponível */}
       {pixData && (
         <div className="pix-result">
           <h3>QR Code Gerado:</h3>
@@ -71,11 +76,12 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Mensagens Persuasivas */}
       <div className="persuasive-messages">
         <p className="message">Pagamento instantâneo, sem taxas e seguro.</p>
         <p className="message">Basta escanear o QR Code ou copiar o código Pix.</p>
       </div>
+
+      {showModal && <Modal message="Código Pix copiado!" onClose={() => setShowModal(false)} />}
     </div>
   );
 };
