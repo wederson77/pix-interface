@@ -1,13 +1,26 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_URL = 'https://pix-3.onrender.com/cobranca';
-
-export const gerarPix = async (dados: { cpf: string; nome: string; valor: string }) => {
+export const gerarPix = async (cpf: string, nome: string, valor: string) => {
   try {
-    const response = await axios.post(API_URL, dados);
+    // Garantir que o CPF esteja limpo (somente números)
+    const cpfFormatado = cpf.replace(/\D/g, "");
+
+    // Garantir que o valor esteja no formato correto (duas casas decimais)
+    const valorFormatado = parseFloat(valor).toFixed(2);
+
+    const payload = {
+      cpf: cpfFormatado,
+      nome: nome.trim(),
+      valor: valorFormatado
+    };
+
+    const response = await axios.post("http://localhost:3001/pix", payload, {
+      headers: { "Content-Type": "application/json" }
+    });
+
     return response.data;
   } catch (error) {
-    console.error('Erro ao gerar Pix', error);
+    console.error("Erro ao gerar PIX:", error);
     return null;
   }
 };
